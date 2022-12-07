@@ -1,5 +1,6 @@
 import * as schedule from 'node-schedule';
 import * as moment from 'moment';
+import * as firebase from 'firebase-admin';
 import { Injectable } from '@nestjs/common';
 import { DoctorService } from 'src/Doctor/doctor.service';
 import { Doctor } from 'src/Doctor/schemas/doctor.schema';
@@ -8,28 +9,41 @@ import { User } from 'src/User/schemas/user.shema';
 import { UserService } from 'src/User/user.service';
 import { NotificationStrategy } from './interfaces/starategy.interface';
 import { consoleStrategy } from './strategies/console.strategy';
+import { firebaseConfig } from 'src/config/firebase.config';
+import { MulticastMessage } from 'firebase-admin/lib/messaging/messaging-api';
 
 @Injectable()
 export class NotificationService {
+  app: firebase.app.App;
   constructor(
     private userService: UserService,
     private doctorService: DoctorService,
-  ) {}
+  ) {
+    this.app = firebase.initializeApp(
+      firebaseConfig,
+      process.env.FIREBASE_APPLICATION_NAME,
+    );
+  }
 
   async addNotification(slot: Slot) {
     const user = await this.userService.finById(slot.user);
     const doctor = await this.doctorService.finById(slot.doctor);
-    console.log(this.getNotificationsDates(slot.date));
+
+    const firebaseNotification = () => {
+      this.app
+        .messaging()
+        .sendMulticast(this.getFirebaseNotification(user, doctor, slot));
+    };
+
     this.getNotificationsDates(slot.date).forEach((date) => {
       schedule.scheduleJob(
         date,
         this.getSendNotificationFunction(
           this.getNotificationMessage(user, doctor, slot),
-          consoleStrategy,
+          firebaseNotification,
         ),
       );
     });
-    console.log(schedule.scheduledJobs);
   }
 
   getNotificationMessage(user: User, doctor: Doctor, slot: Slot): string {
@@ -50,8 +64,19 @@ export class NotificationService {
     return [twoDaysBeforeAppoitmentDate, twoHoursBeforeAppoitmentDate];
   }
 
+  getFirebaseNotification(user: User, doctor: Doctor, slot: Slot) {
+    return {
+      notification: {
+        title: 'Hospital',
+        body: this.getNotificationMessage(user, doctor, slot),
+      },
+      tokens: user.fcm,
+      data: {},
+    };
+  }
+
   getSendNotificationFunction(
-    message: string,
+    message: any,
     strategy: NotificationStrategy,
   ): () => void {
     return () => strategy(message);

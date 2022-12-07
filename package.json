@@ -26,6 +26,8 @@
     "@nestjs/core": "^9.0.0",
     "@nestjs/mongoose": "^9.2.1",
     "@nestjs/platform-express": "^9.0.0",
+    "firebase": "^9.14.0",
+    "firebase-admin": "^11.3.0",
     "moment": "^2.29.4",
     "mongoose": "^6.7.5",
     "node-schedule": "^2.1.0",

@@ -15,6 +15,9 @@ export class User {
 
   @Prop({ required: true })
   phone: string;
+
+  @Prop()
+  fcm: string[];
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
