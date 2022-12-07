@@ -8,9 +8,7 @@ import { Slot } from 'src/Slot/schemas/slot.schema';
 import { User } from 'src/User/schemas/user.shema';
 import { UserService } from 'src/User/user.service';
 import { NotificationStrategy } from './interfaces/starategy.interface';
-import { consoleStrategy } from './strategies/console.strategy';
 import { firebaseConfig } from 'src/config/firebase.config';
-import { MulticastMessage } from 'firebase-admin/lib/messaging/messaging-api';
 
 @Injectable()
 export class NotificationService {
